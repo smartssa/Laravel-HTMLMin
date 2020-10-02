@@ -4,12 +4,13 @@
  * This file is part of Laravel HTMLMin.
  *
  * (c) Graham Campbell <graham@alt-three.com>
+ * (c) Raza Mehdi <srmk@outlook.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace GrahamCampbell\HTMLMin\Minifiers;
+namespace HTMLMin\HTMLMin\Minifiers;
 
 /**
  * This is the blade minifier class.
@@ -62,6 +63,9 @@ class BladeMinifier implements MinifierInterface
             ];
 
             $value = preg_replace(array_keys($replace), array_values($replace), $value);
+        } else {
+            // Where skip minification tags are used let's remove them from markdown or blade.
+            $value = preg_replace("/<!--[\s]+skip\.minification[\s]+-->/", '', $value);
         }
 
         return $value;
@@ -94,6 +98,7 @@ class BladeMinifier implements MinifierInterface
     {
         return preg_match('/<(code|pre|textarea)/', $value) ||
             preg_match('/<script[^\??>]*>[^<\/script>]/', $value) ||
+            preg_match('/<!--[\s]+skip\.minification[\s]+-->/', $value) ||
             preg_match('/value=("|\')(.*)([ ]{2,})(.*)("|\')/', $value);
     }
 

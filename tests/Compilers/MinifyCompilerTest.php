@@ -4,16 +4,17 @@
  * This file is part of Laravel HTMLMin.
  *
  * (c) Graham Campbell <graham@alt-three.com>
+ * (c) Raza Mehdi <srmk@outlook.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace GrahamCampbell\Tests\HTMLMin\Compilers;
+namespace HTMLMin\Tests\HTMLMin\Compilers;
 
-use GrahamCampbell\HTMLMin\Compilers\MinifyCompiler;
-use GrahamCampbell\HTMLMin\Minifiers\BladeMinifier;
 use GrahamCampbell\TestBench\AbstractTestCase;
+use HTMLMin\HTMLMin\Compilers\MinifyCompiler;
+use HTMLMin\HTMLMin\Minifiers\BladeMinifier;
 use Illuminate\Filesystem\Filesystem;
 use Mockery;
 
@@ -36,6 +37,26 @@ class MinifyCompilerTest extends AbstractTestCase
         $this->assertSame('abc', $return);
     }
 
+    public function testMinifyIgnored()
+    {
+        $blade = Mockery::mock(BladeMinifier::class);
+        $files = Mockery::mock(Filesystem::class);
+
+        $compiler = Mockery::mock(MinifyCompiler::class, [$blade, $files, __DIR__, ['stubs']])
+            ->makePartial();
+
+        $compiler->shouldReceive('getPath')
+            ->andReturn('stubs/index.blade.php');
+
+        $blade->shouldReceive('render')
+            ->never();
+
+        $html = 'test    test';
+        $return = $compiler->compileMinify($html);
+
+        $this->assertSame($html, $return);
+    }
+
     public function testCompilers()
     {
         $compiler = $this->getCompiler();
@@ -45,12 +66,12 @@ class MinifyCompilerTest extends AbstractTestCase
         $this->assertInArray('Minify', $compilers);
     }
 
-    protected function getCompiler()
+    protected function getCompiler($ignoredPaths = [])
     {
         $blade = Mockery::mock(BladeMinifier::class);
         $files = Mockery::mock(Filesystem::class);
         $cachePath = __DIR__;
 
-        return new MinifyCompiler($blade, $files, $cachePath);
+        return new MinifyCompiler($blade, $files, $cachePath, $ignoredPaths);
     }
 }
